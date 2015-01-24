@@ -4,7 +4,8 @@
 // GAME OVER when player killed -- DONE
 // GAME OVER when invaders reach ground -- DONE
 // YOU WIN when all invaders killed -- DONE
-// bullets can't kill other bullets?
+// bullets can't kill other bullets? -- DONE
+// invader bullets can't kill invaders -- DONE
 
 
 (function() {
@@ -132,19 +133,20 @@
                 }, {
                     x: 0,
                     y: -6
-                });
+                }, 'player');
                 this.game.addBody(bullet);
             }
         }
     };
 
-    var Bullet = function(center, velocity) {
+    var Bullet = function(center, velocity, owner) {
         this.size = {
             x: 3,
             y: 3
         };
         this.center = center;
         this.velocity = velocity;
+        this.owner = owner;
     }
 
     Bullet.prototype = {
@@ -182,7 +184,7 @@
                 }, {
                     x: Math.random() - 0.5,
                     y: 2
-                });
+                }, 'invader');
                 this.game.addBody(bullet);
             }
 
@@ -234,7 +236,12 @@
             b1.center.x + b1.size.x / 2 < b2.center.x - b2.size.x / 2 ||
             b1.center.x - b1.size.x / 2 > b2.center.x + b2.size.x / 2 ||
             b1.center.y + b1.size.y / 2 < b2.center.y - b2.size.y / 2 ||
-            b1.center.y - b1.size.y / 2 > b2.center.y + b2.size.y / 2);
+            b1.center.y - b1.size.y / 2 > b2.center.y + b2.size.y / 2 ||
+            //bullets don't eliminate each other
+            b1 instanceof Bullet === b2 instanceof Bullet ||
+            // invader bullets don't eliminate invaders
+            (b1.owner === 'invader' && b2 instanceof Invader) ||
+            (b2.owner === 'invader' && b1 instanceof Invader));
     }
 
     window.onload = function() {
