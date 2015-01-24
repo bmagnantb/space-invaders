@@ -1,8 +1,9 @@
-// delay on bullets
-// prevent player from going past walls
-// get invaders to lower at each turn
-// GAME OVER when player killed
-// YOU WIN when all invaders killed
+// delay on bullets -- DONE
+// prevent player from going past walls -- DONE
+// get invaders to lower at each turn -- DONE
+// GAME OVER when player killed -- DONE
+// GAME OVER when invaders reach ground -- DONE
+// YOU WIN when all invaders killed -- DONE
 // bullets can't kill other bullets?
 
 
@@ -17,11 +18,20 @@
 
         this.bodies = createInvaders(this).concat([new Player(this, gameSize)]);
 
+        this.end = false;
+
         var self = this;
         var tick = function() {
-            self.update();
-            self.draw(screen, gameSize);
-            requestAnimationFrame(tick);
+            if (self.end === false) {
+                // console.log(self.end);
+                self.update();
+                self.draw(screen, gameSize);
+                requestAnimationFrame(tick);
+            } else if (self.end === 'win') {
+            		self.win
+            }else {
+                self.ending(screen, gameSize);
+            }
         };
 
         tick();
@@ -33,18 +43,45 @@
             var notColliding = function(b1) {
                 return bodies.filter(function(b2) {
                     return colliding(b1, b2);
-                }).length === 0};
+                }).length === 0
+            };
 
             this.bodies = this.bodies.filter(notColliding);
 
             for (var i = 0; i < this.bodies.length; i++) {
                 this.bodies[i].update();
             }
+
+            // if PLayer no longer exists or an Invader reaches ground END GAME
+            if (this.bodies.filter(function(a) {
+                    return a instanceof Player;
+                }).length === 0 || this.bodies.filter(function(b) {
+                    return b instanceof Invader && b.center.y > 250;
+                }).length > 0) {
+                this.end = null;
+            }
+            // if no Invaders left YOU WIN
+            else if (this.bodies.filter(function(a) {
+            	return a instanceof Invader;
+            }).length === 0) {
+            	this.end = true;
+            }
         },
+
         draw: function(screen, gameSize) {
-            screen.clearRect(0, 0, gameSize.x, gameSize.y)
+            screen.clearRect(0, 0, gameSize.x, gameSize.y);
             for (var i = 0; i < this.bodies.length; i++) {
                 drawRect(screen, this.bodies[i]);
+            }
+        },
+
+        ending: function(screen, gameSize) {
+            screen.clearRect(0, 0, gameSize.x, gameSize.y);
+            screen.font = "24px mono";
+            if (this.end === true) {
+            	screen.fillText("YOU WIN", 100, 150);
+            } else {
+            	screen.fillText("GAME OVER", 100, 150);
             }
         },
 
@@ -53,16 +90,17 @@
         },
 
         invadersBelow: function(invader) {
-        	return this.bodies.filter(function(b) {
-        		return b instanceof Invader &&
-        			b.center.y > invader.center.y &&
-        			b.center.x - invader.center.x < invader.size.x;
-        	}).length > 0
+            return this.bodies.filter(function(b) {
+                return b instanceof Invader &&
+                    b.center.y > invader.center.y &&
+                    b.center.x - invader.center.x < invader.size.x;
+            }).length > 0
         }
     };
 
     var Player = function(game, gameSize) {
         this.game = game;
+        this.name = 'player';
         this.size = {
             x: 15,
             y: 15
@@ -72,16 +110,22 @@
             y: gameSize.y - this.size.x
         }
         this.keyboarder = new Keyboarder();
+
+        var self = this;
+        this.timer = 500;
+        setInterval(function() {
+            self.timer += 100;
+        }, 100)
     }
 
     Player.prototype = {
         update: function() {
-            if (this.keyboarder.isDown(this.keyboarder.KEYS.LEFT)) {
+            if (this.keyboarder.isDown(this.keyboarder.KEYS.LEFT) && this.center.x - this.size.x / 2 > 2) {
                 this.center.x -= 2;
-            } else if (this.keyboarder.isDown(this.keyboarder.KEYS.RIGHT)) {
+            } else if (this.keyboarder.isDown(this.keyboarder.KEYS.RIGHT) && this.center.x + this.size.x / 2 < 298) {
                 this.center.x += 2;
-            }
-            if (this.keyboarder.isDown(this.keyboarder.KEYS.SPACE)) {
+            } else if (this.keyboarder.isDown(this.keyboarder.KEYS.SPACE) && this.timer >= 500) {
+                this.timer = 0;
                 var bullet = new Bullet({
                     x: this.center.x,
                     y: this.center.y - this.size.y / 2
@@ -91,7 +135,6 @@
                 });
                 this.game.addBody(bullet);
             }
-
         }
     };
 
@@ -126,6 +169,7 @@
         update: function() {
             if (this.patrolX < 0 || this.patrolX > 40) {
                 this.speedX = -this.speedX;
+                this.center.y += 5;
             }
 
             this.center.x += this.speedX;
