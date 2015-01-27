@@ -6,6 +6,7 @@
 // YOU WIN when all invaders killed -- DONE
 // bullets can't kill other bullets? -- DONE
 // invader bullets can't kill invaders -- DONE
+// player can fire while moving -- DONE
 
 
 (function() {
@@ -125,7 +126,7 @@
                 this.center.x -= 2;
             } else if (this.keyboarder.isDown(this.keyboarder.KEYS.RIGHT) && this.center.x + this.size.x / 2 < 298) {
                 this.center.x += 2;
-            } else if (this.keyboarder.isDown(this.keyboarder.KEYS.SPACE) && this.timer >= 500) {
+            }  if (this.keyboarder.isDown(this.keyboarder.KEYS.SPACE) && this.timer >= 500) {
                 this.timer = 0;
                 var bullet = new Bullet({
                     x: this.center.x,
